@@ -10,7 +10,7 @@ from tensorflow.keras import backend
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from utils import real_, norm_row, norm_pixel
 
-
+# the 15 signals out of 64 used here:
 signal_idx = [10, 11, 12, 16, 17, 18, 34, 35, 36, 40, 41, 42, 58, 59, 60]
 
 data_path = 'data/raw data/MATLAB'
@@ -19,6 +19,7 @@ with h5py.File(os.path.join(data_path, 'DICAM_TOWER_spectra_H.mat'), 'r') as f:
 with h5py.File(os.path.join(data_path, 'DICAM_TOWER_spectra_A17_D40.mat'), 'r') as f:
     defective = real_(np.array(f['FFT_X2dotfl']))[:, :15000, signal_idx].transpose(0, 2, 1)
 
+# Selecting a window of size 15 frequency data point around the first mode (the highest amplitude):
 healthy_small = np.zeros((100, 15, 15))
 defective_small = np.zeros((100, 15, 15))
 
@@ -34,15 +35,10 @@ for i in range(healthy_small.shape[0]):
 for i in range(defective_small.shape[0]):
     defective_small[i, :, :] = norm_row(defective_small[i, :, :])
 
-# all_small = np.concatenate((healthy_small, defective_small), axis=0)
-# all_small = norm_pixel(all_small)
-# healthy_small = all_small[:healthy.shape[0], :, :]
-# defective_small = all_small[healthy.shape[0]:, :, :]
-
 healthy_small = np.expand_dims(healthy_small, axis=-1)
 defective_small = np.expand_dims(defective_small, axis=-1)
 
-n_times = 1
+n_times = 1  # Nummber of times <n_folds>-fold cross-validation is performed. It is better to do it once.
 n_folds = 10
 idxs = list(range(100))
 accs = []
@@ -64,6 +60,7 @@ for t in range(n_times):
         y_train = to_categorical(y_train)
         y_test = to_categorical(y_test)
 
+        # Defining the model
         model = Sequential()
         model.add(Conv2D(4, (3, 3), padding='same', activation='relu', input_shape=(15, 15, 1)))
         model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -71,6 +68,7 @@ for t in range(n_times):
         model.add(Dropout(0.5))
         model.add(Dense(2, activation='softmax'))
 
+        # Defining the callbacks
         ea = EarlyStopping(patience=100)
         cp = ModelCheckpoint('checkpoints/cnn.h5', save_best_only=True)
         cb = [ea, cp]
@@ -78,7 +76,9 @@ for t in range(n_times):
         model.compile('nadam', 'binary_crossentropy', ['accuracy'])
         history = model.fit(x_train, y_train, batch_size=2, verbose=0, epochs=1000, validation_split=0.2, callbacks=cb)
 
+        # Loading the best model saved during training
         model = load_model('checkpoints/cnn.h5')
+
         test_accuracy = model.evaluate(x_test, y_test)[1]
         accs.append(test_accuracy)
 

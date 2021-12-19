@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 
 
 def q_stat(r):
+    """Calculates the Q-Statistic."""
     q = []
     for i in range(r.shape[0]):
         q.append(np.matmul(r[i], r[i].T))
@@ -304,6 +305,7 @@ def only_feature_1():
 
 
 def far_analysis(num_features=10):
+    """False alarm rate analysis."""
     if not os.path.exists('results/far'):
         os.mkdir('results/far')
     healthy_filepath = 'data/healthy.csv'
@@ -614,6 +616,7 @@ def far_analysis(num_features=10):
 
 
 def mar_analysis(num_features=10):
+    """Missed alarm rate analysis."""
     if not os.path.exists('results/mar'):
         os.mkdir('results/mar')
     healthy_filepath = 'data/healthy.csv'
@@ -876,7 +879,7 @@ def mar_vs_damage(num_features=6):
     plt.savefig('results/mar/mar_vs_damage.png')
 
 
-def main(num_features=10):
+def main(num_features=6):
     healthy_filepath = 'data/healthy.csv'
     healthy = np.genfromtxt(healthy_filepath, delimiter=',')[:, :num_features]
 

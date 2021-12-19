@@ -23,7 +23,7 @@ for b in list(data.keys())[1:]:
     defective_data = data[b]
     defective_labels = to_categorical(np.ones(healthy_data.shape[0]), num_classes=n_classes)
 
-    n_times = 5
+    n_times = 1
     n_folds = 10
     idxs = list(range(healthy_data.shape[0]))
     accs = []
